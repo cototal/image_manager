@@ -1,0 +1,4 @@
+<a class="btn btn-outline-danger"
+   data-method="DELETE"
+   href="{{ path("image_delete", {id: image.id, _token: csrf_token("delete"~image.id)}) }}"
+   data-return-to="{{ path("image_index") }}">Delete</a>
