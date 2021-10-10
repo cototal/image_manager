@@ -1,4 +1,6 @@
 .idea/
+public/images/*
+!public/images/.gitkeep
 
 ###> symfony/framework-bundle ###
 /.env.local

@@ -6,6 +6,7 @@ use App\Entity\Image;
 use App\Form\ImageType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -41,17 +42,26 @@ class ImageController extends AbstractController
      */
     public function new(Request $request): Response
     {
+        $apiRequest = $request->query->getBoolean("apiRequest", false);
         $image = new Image();
-        $form = $this->createForm(ImageType::class, $image);
+        $form = $this->createForm(ImageType::class, $image, [
+            "csrf_protection" => !$apiRequest
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($image);
             $this->em->flush();
 
+            if ($apiRequest) {
+                return $this->json($image, 201);
+            }
             return $this->redirectToRoute("image_show", ["id" => $image->getId()]);
         }
 
+        if ($apiRequest && strtolower($request->getMethod()) === "post") {
+            return $this->json(["error" => "Error processing image"], 422);
+        }
         return $this->render('image/new.html.twig', [
             'image' => $image,
             'form' => $form->createView(),
