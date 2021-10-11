@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Image;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * @method Image|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,32 +20,34 @@ class ImageRepository extends ServiceEntityRepository
         parent::__construct($registry, Image::class);
     }
 
-    // /**
-    //  * @return Image[] Returns an array of Image objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    public function checkFileDup(UploadedFile $file)
     {
-        return $this->createQueryBuilder('i')
-            ->andWhere('i.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('i.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $nameParts = explode(".", $file->getClientOriginalName());
+        $size = $file->getSize();
 
-    /*
-    public function findOneBySomeField($value): ?Image
-    {
-        return $this->createQueryBuilder('i')
-            ->andWhere('i.exampleField = :val')
-            ->setParameter('val', $value)
+        return $this->createQueryBuilder("image")
+            ->andWhere("image.imageName LIKE :nameStart")
+            ->setParameter("nameStart", $nameParts[0] . "%")
+            ->andWhere("image.size = :imageSize")
+            ->setParameter("imageSize", $size)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
+            ->execute();
     }
-    */
+
+    public function checkExistingDup(Image $image)
+    {
+        $imageNameParts = explode("-", $image->getImageName());
+        array_pop($imageNameParts);
+        $imageStart = implode("-", $imageNameParts);
+
+        return $this->createQueryBuilder("image")
+            ->andWhere("image.imageName LIKE :nameStart")
+            ->setParameter("nameStart", $imageStart . "%")
+            ->andWhere("image.size = :imageSize")
+            ->setParameter("imageSize", $image->getSize())
+            ->andWhere("image.id != :currentId")
+            ->setParameter("currentId", $image->getId())
+            ->getQuery()
+            ->execute();
+    }
 }

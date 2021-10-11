@@ -54,6 +54,7 @@ $(() => {
         $multiUploadArea[0].addEventListener("drop", async evt => {
             evt.preventDefault();
 
+            // TODO: Send these to the new multi-upload route with image[] name
             const items = evt.dataTransfer.items;
             const files = await getFilesFromWebkitDataTransferItems(items);
             for (const file of files.filter(f => (f.type.startsWith("image/")))) {
